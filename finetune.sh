@@ -33,7 +33,7 @@ DISTRIBUTED_ARGS="
 "
 
 # funasr trainer路径保持原样
-train_tool=/kaggle/working/mysitepackages/funasr/bin
+train_tool=/kaggle/working/mysitepackages/funasr/bin/train_ds.py
 
 torchrun $DISTRIBUTED_ARGS \
 ${train_tool} \
