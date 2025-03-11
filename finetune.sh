@@ -3,48 +3,39 @@
 
 workspace=`pwd`
 
-# which gpu to train or finetune
+# 设置单GPU
 export CUDA_VISIBLE_DEVICES="0"
-gpu_num=$(echo $CUDA_VISIBLE_DEVICES | awk -F "," '{print NF}')
+gpu_num=1  # 直接设置为1，替代原来的计算方式
 
-# model_name from model_hub, or model_dir in local path
-
-## option 1, download model automatically
+# 模型设置保持原样
 model_name_or_model_dir="iic/SenseVoiceSmall"
 
-## option 2, download model by git
-#local_path_root=${workspace}/modelscope_models
-#mkdir -p ${local_path_root}/${model_name_or_model_dir}
-#git clone https://www.modelscope.cn/${model_name_or_model_dir}.git ${local_path_root}/${model_name_or_model_dir}
-#model_name_or_model_dir=${local_path_root}/${model_name_or_model_dir}
-
-
-# data dir, which contains: train.json, val.json
+# 数据路径保持原样
 train_data=${workspace}/data/train_example.jsonl
 val_data=${workspace}/data/val_example.jsonl
 
-# exp output dir
+# 输出目录保持原样
 output_dir="./outputs"
 log_file="${output_dir}/log.txt"
 
-deepspeed_config=${workspace}/deepspeed_conf/ds_stage1.json
+# 修改为适用于单卡的deepspeed配置（或关闭deepspeed）
+deepspeed_config=${workspace}/deepspeed_conf/ds_stage0.json  # 使用stage 0配置
+# 或者完全禁用deepspeed:
+# use_deepspeed=false
 
 mkdir -p ${output_dir}
 echo "log_file: ${log_file}"
 
+# 单卡训练时简化分布式参数
 DISTRIBUTED_ARGS="
-    --nnodes ${WORLD_SIZE:-1} \
-    --nproc_per_node $gpu_num \
-    --node_rank ${RANK:-0} \
-    --master_addr ${MASTER_ADDR:-127.0.0.1} \
-    --master_port ${MASTER_PORT:-26669}
+    --nproc_per_node 1 \
+    --standalone
 "
 
-echo $DISTRIBUTED_ARGS
-
-# funasr trainer path
+# funasr trainer路径保持原样
 train_tool=/kaggle/working/mysitepackages/funasr/bin
 
+# 修改后的执行命令
 torchrun $DISTRIBUTED_ARGS \
 ${train_tool} \
 ++model="${model_name_or_model_dir}" \
@@ -53,8 +44,8 @@ ${train_tool} \
 ++valid_data_set_list="${val_data}" \
 ++dataset_conf.data_split_num=1 \
 ++dataset_conf.batch_sampler="BatchSampler" \
-++dataset_conf.batch_size=6000  \
-++dataset_conf.sort_size=1024 \
+++dataset_conf.batch_size=3000  \  # 根据显存适当减小
+++dataset_conf.sort_size=512 \    # 适当减小排序缓冲区
 ++dataset_conf.batch_type="token" \
 ++dataset_conf.num_workers=4 \
 ++train_conf.max_epoch=50 \
@@ -64,7 +55,10 @@ ${train_tool} \
 ++train_conf.save_checkpoint_interval=2000 \
 ++train_conf.keep_nbest_models=20 \
 ++train_conf.avg_nbest_model=10 \
-++train_conf.use_deepspeed=false \
+++train_conf.use_deepspeed=true \  # 如果使用deepspeed stage 0则保持true
 ++train_conf.deepspeed_config=${deepspeed_config} \
 ++optim_conf.lr=0.0002 \
 ++output_dir="${output_dir}" &> ${log_file}
+
+# 或者更简单的单卡启动方式（如果支持）：
+# python ${train_tool} ... 参数同上
