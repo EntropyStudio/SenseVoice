@@ -35,7 +35,6 @@ DISTRIBUTED_ARGS="
 # funasr trainer路径保持原样
 train_tool=/kaggle/working/mysitepackages/funasr/bin
 
-# 修改后的执行命令
 torchrun $DISTRIBUTED_ARGS \
 ${train_tool} \
 ++model="${model_name_or_model_dir}" \
@@ -44,8 +43,8 @@ ${train_tool} \
 ++valid_data_set_list="${val_data}" \
 ++dataset_conf.data_split_num=1 \
 ++dataset_conf.batch_sampler="BatchSampler" \
-++dataset_conf.batch_size=3000  \  # 根据显存适当减小
-++dataset_conf.sort_size=512 \    # 适当减小排序缓冲区
+++dataset_conf.batch_size=6000  \
+++dataset_conf.sort_size=1024 \
 ++dataset_conf.batch_type="token" \
 ++dataset_conf.num_workers=4 \
 ++train_conf.max_epoch=50 \
@@ -55,10 +54,7 @@ ${train_tool} \
 ++train_conf.save_checkpoint_interval=2000 \
 ++train_conf.keep_nbest_models=20 \
 ++train_conf.avg_nbest_model=10 \
-++train_conf.use_deepspeed=true \  # 如果使用deepspeed stage 0则保持true
+++train_conf.use_deepspeed=false \
 ++train_conf.deepspeed_config=${deepspeed_config} \
 ++optim_conf.lr=0.0002 \
 ++output_dir="${output_dir}" &> ${log_file}
-
-# 或者更简单的单卡启动方式（如果支持）：
-# python ${train_tool} ... 参数同上
