@@ -4,7 +4,7 @@
 workspace=`pwd`
 
 # which gpu to train or finetune
-export CUDA_VISIBLE_DEVICES="0,1"
+export CUDA_VISIBLE_DEVICES="0"
 gpu_num=$(echo $CUDA_VISIBLE_DEVICES | awk -F "," '{print NF}')
 
 # model_name from model_hub, or model_dir in local path
