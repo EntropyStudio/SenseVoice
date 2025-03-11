@@ -43,7 +43,7 @@ DISTRIBUTED_ARGS="
 echo $DISTRIBUTED_ARGS
 
 # funasr trainer path
-train_tool=/usr/local/bin/funasr/bin
+train_tool=/kaggle/working/mysitepackages/funasr/bin
 
 torchrun $DISTRIBUTED_ARGS \
 ${train_tool} \
